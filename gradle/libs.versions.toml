@@ -16,6 +16,9 @@ navigation = "2.9.7"
 workmanager = "2.9.0"
 hiltWork = "1.2.0"
 timber = "5.0.1"
+mockk = "1.14.9"
+coroutineTest = "1.8.1"
+turbine = "1.2.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -43,6 +46,9 @@ androidx-compose-hilt-navigation = { group = "androidx.hilt", name = "hilt-navig
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
 androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
 log-timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutineTest" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 
 
 [plugins]
