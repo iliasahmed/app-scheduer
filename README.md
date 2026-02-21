@@ -9,6 +9,16 @@ A simple Android app that lets users schedule installed apps to launch at a spec
 - Track execution status (completed / failed)  
 - View history of executed schedules  
 
+## Screenshots
+
+Here are some screenshots:
+
+<p align="center">
+  <img src="screenshots/home.png" alt="Home Screen" width="40%" />
+  <img src="screenshots/pick_app.png" alt="Pick App Screen" width="40%" />
+  <img src="screenshots/schedule_time.png" alt="Schedule Time Screen" width="40%" />
+</p>
+
 ## Tech Stack
 - Kotlin  
 - MVVM + Clean Architecture  
