@@ -24,7 +24,10 @@ interface ScheduleDao {
     @Query("SELECT * FROM schedules WHERE id = :scheduleId")
     suspend fun getScheduleById(scheduleId: Long): ScheduleEntity?
 
-    @Query("SELECT * FROM schedules ORDER BY scheduledTime DESC")
+    @Query("SELECT * FROM schedules ORDER BY scheduledTime ASC")
     fun getAllSchedules(): Flow<List<ScheduleEntity>>
+
+    @Query("SELECT * FROM schedules WHERE status = 'PENDING' AND scheduledTime BETWEEN :startTime AND :endTime")
+    suspend fun getSchedulesInTimeRange(startTime: Long, endTime: Long): List<ScheduleEntity>
 
 }

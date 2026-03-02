@@ -27,4 +27,11 @@
     <!-- Dialog buttons -->
     <string name="btn_yes_cancel">Yes, cancel</string>
     <string name="btn_keep">Keep it</string>
+    <string name="btn_search">Search</string>
+
+    <!-- Tabs -->
+    <string name="tab_pending">Pending</string>
+    <string name="tab_cancelled">Cancelled</string>
+    <string name="tab_completed">Completed</string>
+
 </resources>

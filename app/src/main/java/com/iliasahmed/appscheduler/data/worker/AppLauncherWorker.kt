@@ -37,6 +37,8 @@ class AppLauncherWorker @AssistedInject constructor(
                 .getLaunchIntentForPackage(packageName)
                 ?.apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
                 }
 
             if (launchIntent != null) {

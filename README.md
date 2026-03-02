@@ -15,6 +15,7 @@ Here are some screenshots:
 
 <p align="center">
   <img src="screenshots/home.png" alt="Home Screen" width="40%" />
+  <img src="screenshots/completed.png" alt="Home Screen" width="40%" />
   <img src="screenshots/pick_app.png" alt="Pick App Screen" width="40%" />
   <img src="screenshots/schedule_time.png" alt="Schedule Time Screen" width="40%" />
 </p>
@@ -36,7 +37,6 @@ The project follows MVVM with Clean Architecture:
 ## Testing
 - Unit tests for ViewModels, UseCases, Repository, and Worker  
 - Coroutine test utilities and MockK  
-- WorkManager test for background worker  
 
 ## How to Run
 1. Clone the project  

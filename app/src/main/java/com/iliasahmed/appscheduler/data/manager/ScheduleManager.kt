@@ -38,6 +38,11 @@ class ScheduleManager @Inject constructor(
                 return Result.Error("Scheduled time must be in the future")
             }
 
+            val conflict = repository.checkTimeConflict(scheduledTime.time)
+            if (conflict != null) {
+                return Result.Conflict(conflict)
+            }
+
             val schedule = ScheduleModel(
                 appName = appName,
                 packageName = packageName,

@@ -87,6 +87,22 @@ class ScheduleRepositoryImpl @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+    override suspend fun checkTimeConflict(
+        scheduledTime: Long,
+        excludeScheduleId: Long?,
+        conflictWindowMinutes: Int
+    ): ScheduleModel? {
+        return withContext(Dispatchers.IO) {
+            val windowMillis = conflictWindowMinutes * 60 * 1000L
+            val startTime = scheduledTime - windowMillis
+            val endTime = scheduledTime + windowMillis
+
+            val conflicts = scheduleDao.getSchedulesInTimeRange(startTime, endTime)
+                .filter { it.id != excludeScheduleId }
+
+            conflicts.firstOrNull()?.toDomain()
+        }
+    }
     private fun isLaunchableApp(
         appInfo: ApplicationInfo,
         packageManager: PackageManager

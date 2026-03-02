@@ -13,4 +13,5 @@ interface ScheduleRepository {
     suspend fun updateSchedule(schedule: ScheduleModel)
     suspend fun deleteSchedule(schedule: ScheduleModel)
     suspend fun getInstalledApps(): Flow<Result<List<InstalledAppModel>>>
+    suspend fun checkTimeConflict(scheduledTime: Long, excludeScheduleId: Long? = null, conflictWindowMinutes: Int = 1): ScheduleModel?
 }

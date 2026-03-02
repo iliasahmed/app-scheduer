@@ -11,17 +11,16 @@ import javax.inject.Inject
 class ScheduleAppUseCase @Inject constructor(
     private val scheduleManager: ScheduleManager
 ) : BaseUseCase<ScheduleAppUseCase.Params, Unit> {
+
     override suspend fun execute(params: Params): Flow<Result<Unit>> = flow {
         emit(Result.Loading)
-
         try {
-            scheduleManager.scheduleApp(
-                params.appName,
-                params.packageName,
-                params.scheduledTime
-            )
-            emit(Result.Success(Unit))
-
+            when (val result = scheduleManager.scheduleApp(params.appName, params.packageName, params.scheduledTime)) {
+                is Result.Success -> emit(Result.Success(Unit))
+                is Result.Conflict -> emit(Result.Error("Time conflict with ${result.schedule.appName}, please keep time difference 2 minutes"))
+                is Result.Error -> emit(Result.Error(result.message))
+                else -> {}
+            }
         } catch (e: Exception) {
             emit(Result.Error(e.message ?: "Failed to schedule app"))
         }

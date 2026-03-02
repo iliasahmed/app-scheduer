@@ -12,12 +12,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.ModalBottomSheet
@@ -25,8 +30,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -38,7 +47,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,9 +68,7 @@ internal fun ScheduleListRoute(
         viewModel.loadInstalledApps()
         viewModel.loadSchedules()
     }
-    ScheduleListScreen(
-        viewModel = viewModel,
-    )
+    ScheduleListScreen(viewModel = viewModel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,9 +76,11 @@ internal fun ScheduleListRoute(
 fun ScheduleListScreen(
     viewModel: ScheduleViewModel,
 ) {
-    val schedulesUiState by viewModel.schedulesUiState.collectAsStateWithLifecycle()
+    val filteredSchedules by viewModel.filteredSchedules.collectAsStateWithLifecycle()
     val actionUiState by viewModel.actionUiState.collectAsStateWithLifecycle()
     val appsUiState by viewModel.appsUiState.collectAsStateWithLifecycle()
+    val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuerySchedules.collectAsStateWithLifecycle()
 
     var showCancelDialog by remember { mutableStateOf<ScheduleModel?>(null) }
     var showDeleteDialog by remember { mutableStateOf<ScheduleModel?>(null) }
@@ -82,16 +93,28 @@ fun ScheduleListScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedScheduleForEdit by remember { mutableStateOf<ScheduleModel?>(null) }
 
+    var isSearchActive by remember { mutableStateOf(false) }
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(actionUiState) {
         when (val op = actionUiState) {
             is ScheduleViewModel.UiState.Success -> {
-                snackBarHostState.showSnackbar(op.data, actionLabel = null, withDismissAction = false,SnackbarDuration.Short)
+                snackBarHostState.showSnackbar(
+                    op.data,
+                    actionLabel = null,
+                    withDismissAction = false,
+                    SnackbarDuration.Short
+                )
                 viewModel.resetActionState()
             }
             is ScheduleViewModel.UiState.Error -> {
-                snackBarHostState.showSnackbar(op.message, actionLabel = null, withDismissAction = false,SnackbarDuration.Long)
+                snackBarHostState.showSnackbar(
+                    op.message,
+                    actionLabel = null,
+                    withDismissAction = false,
+                    SnackbarDuration.Long
+                )
                 viewModel.resetActionState()
             }
             else -> Unit
@@ -100,23 +123,73 @@ fun ScheduleListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorScheme.primary,
-                    titleContentColor = colorScheme.onPrimary
-                )
-            )
+            Column {
+                if (isSearchActive) {
+                    SearchTopAppBar(
+                        searchQuery = searchQuery,
+                        onQueryChange = { viewModel.updateSearchQuerySchedules(it) },
+                        onCloseSearch = {
+                            isSearchActive = false
+                            viewModel.clearScheduleSearch()
+                        }
+                    )
+                } else {
+                    TopAppBar(
+                        title = { Text(stringResource(R.string.app_name)) },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = colorScheme.primary,
+                            titleContentColor = colorScheme.onPrimary
+                        ),
+                        actions = {
+                            IconButton(onClick = { isSearchActive = true }) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = stringResource(R.string.btn_search),
+                                    tint = colorScheme.onPrimary
+                                )
+                            }
+                        }
+                    )
+                }
+
+                TabRow(
+                    selectedTabIndex = selectedTab.ordinal,
+                    containerColor = colorScheme.onPrimary,
+                    contentColor = colorScheme.primary
+                ) {
+                    Tab(
+                        selected = selectedTab == ScheduleViewModel.ScheduleTab.PENDING,
+                        onClick = { viewModel.selectTab(ScheduleViewModel.ScheduleTab.PENDING) },
+                        text = { Text(stringResource(R.string.tab_pending)) }
+                    )
+                    Tab(
+                        selected = selectedTab == ScheduleViewModel.ScheduleTab.CANCELLED,
+                        onClick = { viewModel.selectTab(ScheduleViewModel.ScheduleTab.CANCELLED) },
+                        text = { Text(stringResource(R.string.tab_cancelled)) }
+                    )
+                    Tab(
+                        selected = selectedTab == ScheduleViewModel.ScheduleTab.COMPLETED,
+                        onClick = { viewModel.selectTab(ScheduleViewModel.ScheduleTab.COMPLETED) },
+                        text = { Text(stringResource(R.string.tab_completed)) }
+                    )
+                }
+            }
         },
+
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    showAppPicker = true
-                    viewModel.loadInstalledApps()
-                },
-                containerColor = colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.title_add_schedule))
+            if (selectedTab == ScheduleViewModel.ScheduleTab.PENDING) {
+                FloatingActionButton(
+                    onClick = {
+                        showAppPicker = true
+                        viewModel.loadInstalledApps()
+                    },
+                    containerColor = colorScheme.primary
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.title_add_schedule)
+                    )
+                }
             }
         },
         snackbarHost = { SnackbarHost(snackBarHostState) }
@@ -127,7 +200,7 @@ fun ScheduleListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (val state = schedulesUiState) {
+            when (val state = filteredSchedules) {
                 is ScheduleViewModel.UiState.Loading -> {
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
@@ -140,7 +213,11 @@ fun ScheduleListScreen(
                 is ScheduleViewModel.UiState.Success -> {
                     val schedules = state.data
                     if (schedules.isEmpty()) {
-                        EmptyState(modifier = Modifier.align(Alignment.Center))
+                        EmptyState(
+                            tab = selectedTab,
+                            isSearching = searchQuery.isNotEmpty(),
+                            modifier = Modifier.align(Alignment.Center)
+                        )
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
@@ -164,7 +241,8 @@ fun ScheduleListScreen(
                         }
                     }
                 }
-                is ScheduleViewModel.UiState.Idle -> {  }
+                is ScheduleViewModel.UiState.Idle -> {}
+                is ScheduleViewModel.UiState.Conflict -> {}
             }
 
             if (actionUiState is ScheduleViewModel.UiState.Loading) {
@@ -256,7 +334,9 @@ fun ScheduleListScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showCancelDialog = null }) { Text(stringResource(R.string.btn_keep)) }
+                TextButton(onClick = { showCancelDialog = null }) {
+                    Text(stringResource(R.string.btn_keep))
+                }
             }
         )
     }
@@ -267,10 +347,7 @@ fun ScheduleListScreen(
             title = { Text(stringResource(R.string.title_delete_schedule)) },
             text = {
                 Text(
-                    stringResource(
-                        R.string.msg_delete_schedule_confirm,
-                        schedule.appName
-                    ),
+                    stringResource(R.string.msg_delete_schedule_confirm, schedule.appName),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -285,10 +362,65 @@ fun ScheduleListScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = null }) { Text(stringResource(R.string.action_cancel)) }
+                TextButton(onClick = { showDeleteDialog = null }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
             }
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchTopAppBar(
+    searchQuery: String,
+    onQueryChange: (String) -> Unit,
+    onCloseSearch: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            TextField(
+                value = searchQuery,
+                onValueChange = onQueryChange,
+                placeholder = { Text("Search schedules...") },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedTextColor = colorScheme.onPrimary,
+                    unfocusedTextColor = colorScheme.onPrimary,
+                    cursorColor = colorScheme.onPrimary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onCloseSearch) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Close search",
+                    tint = colorScheme.onPrimary
+                )
+            }
+        },
+        actions = {
+            if (searchQuery.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        Icons.Default.Clear,
+                        contentDescription = "Clear",
+                        tint = colorScheme.onPrimary
+                    )
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = colorScheme.primary,
+            titleContentColor = colorScheme.onPrimary
+        )
+    )
 }
 
 
